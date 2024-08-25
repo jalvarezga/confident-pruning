@@ -5,7 +5,7 @@ import math# to use functions such as log
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-tf.version.VERSION
+print(tf.version.VERSION)
 import keras
 keras.version()
 from keras.models import Sequential
@@ -14,7 +14,6 @@ from sklearn.metrics import confusion_matrix
 import seaborn as ans
 np.random.seed(0) #for reproducibility
 from keras.datasets import mnist
-print('hello')
 (x_train, y_train), (x_test_original, y_test_original)=mnist.load_data()
 #we actually do not need the training dataset. We only incroporate it to have the original split 
 #such that the train data is kept separate from all the calibration process
@@ -42,6 +41,7 @@ lambdas_string = [f"{0.01 * i:.2f}" for i in range(100)] #string representation 
 #print(lambdas_string) #this is useful so that when we load the models, there's no issue at 
 lambdas=[i/100 for i in range(100)]
 models={} #to store all the models in a dictionary in a key:value format. Key is the value of lambda as a string, value is the model
+#make sure to use your working directory where you saved the pruned neural networks!
 for i in lambdas_string:
         best_model_file = f'/Users/joaquinalvarez/Downloads/pruning2/pruned_model_{i}.keras'
         model= tf.keras.models.load_model(best_model_file)
@@ -65,15 +65,11 @@ def empirical_risks(seed_argument):
         empirical_risks_calibration.append(1-calibrate_acc)
     return({'validation':empirical_risks_validation, 'calibration':empirical_risks_calibration})
 #print(empirical_risks(1))
-
-
+#valid p-value function
 def valid_p_val(r,alpha,n):
     return(binom.cdf(k=r*n, n=n, p=alpha))
-
 simulation_example=empirical_risks(1)
-
 #print(simulation_example)
-
 def fixed_sequence(delta,alpha,n, empirical_risks):
     #delta is the level at which  we wish to implement the fixed sequence testing
     #alpha, the risk control threshold
@@ -82,18 +78,10 @@ def fixed_sequence(delta,alpha,n, empirical_risks):
     while  valid_p_val(empirical_risks[k],alpha, n)<delta:
         k=k+1 #we reject the null and explore pruning more parameters to see if we should reject the null or not
     return(lambdas[k-1],k-1) #also useful to have the corresponding index to map between valid p_values
-
 #why return k-1 and not k? becasue  we exit the loop at valid_p_val(risks[k],alpha, n)>=delta. That is, a k such that the associated null was NOT rejected
-
 #and empirircal risks and pruning parameter indicdes in lambdas
 
-
-
 #implementation example
-
 print(len(x_calibrate)) #prints 9,000, total number of images in the calibration dataset
-
-
-
 
 print(fixed_sequence(delta=0.05, alpha=0.03, n=len(x_calibrate),empirical_risks=simulation_example['calibration']), 'was the output for delta=0.05, alpha=0.03' )
